@@ -1,3 +1,5 @@
+import sys
+
 from sqlalchemy import func
 from sqlalchemy.types import UserDefinedType, TypeEngine
 
@@ -6,6 +8,14 @@ from rdkit import DataStructs
 from rdkit.DataStructs import ExplicitBitVect
 
 from . import comparator
+
+# Python 2.7 compatibility inspired by django.utils.six
+PY3 = sys.version_info[0] == 3
+if PY3:
+    buffer_types = (bytes, bytearray, memoryview)
+else:
+    buffer_types = (bytearray, memoryview, buffer)
+
 
 class Mol(UserDefinedType):
 
@@ -35,7 +45,7 @@ class Mol(UserDefinedType):
         def process(value):
             if value is None:
                 return value
-            elif isinstance(value, memoryview):
+            elif isinstance(value, buffer_types):
                 return Chem.Mol(bytes(value))
             else:
                 raise RuntimeError(
@@ -75,7 +85,7 @@ class Bfp(UserDefinedType):
         def process(value):
             if value is None:
                 return value
-            elif isinstance(value, memoryview):
+            elif isinstance(value, buffer_types):
                 return DataStructs.CreateFromBinaryText(bytes(value))
             else:
                 raise RuntimeError(
